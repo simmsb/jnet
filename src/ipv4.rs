@@ -389,17 +389,19 @@ where
     }
 
     /// Fills the payload with an UDP packet
-    pub fn udp<F>(&mut self, f: F)
+    pub fn udp<F>(&mut self, f: F) -> Option<()>
     where
         F: FnOnce(&mut udp::Packet<&mut [u8]>),
     {
         self.set_protocol(Protocol::Udp);
         let len = {
-            let mut udp = udp::Packet::new(self.payload_mut());
+            let mut udp = udp::Packet::new(self.payload_mut())?;
             f(&mut udp);
             udp.len()
         };
         self.truncate(len);
+
+        Some(())
     }
 
     /// Truncates the *payload* to the specified length

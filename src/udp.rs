@@ -216,8 +216,10 @@ where
     /// # Panics
     ///
     /// This constructor panics if the given `buffer` is not large enough to contain the UDP header.
-    pub fn new(mut buffer: B) -> Self {
-        assert!(buffer.as_slice().len() >= usize(HEADER_SIZE));
+    pub fn new(mut buffer: B) -> Option<Self> {
+        if buffer.as_slice().len() < usize(HEADER_SIZE) {
+            return None;
+        }
 
         let len = u16(buffer.as_slice().len()).unwrap_or(u16::MAX);
         buffer.truncate(len);
@@ -226,17 +228,21 @@ where
         packet.set_checksum(0);
         unsafe { packet.set_length(len) }
 
-        packet
+        Some(packet)
     }
 
     /* Setters */
     /// Fills the payload with the given data and adjusts the length of the UDP packet
-    pub fn set_payload(&mut self, data: &[u8]) {
+    pub fn set_payload(&mut self, data: &[u8]) -> Option<()> {
         let len = u16(data.len()).unwrap();
-        assert!(self.payload_len() >= len);
+        if self.payload_len() < len {
+            return None;
+        }
 
         self.truncate(len);
         self.payload_mut().copy_from_slice(data);
+
+        Some(())
     }
 
     /* Miscellaneous */

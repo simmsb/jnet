@@ -47,10 +47,12 @@ where
 {
     /* Constructors */
     /// Creates a new Ethernet frame from the given buffer
-    pub fn new(buffer: B) -> Self {
-        assert!(buffer.as_slice().len() >= usize(HEADER_SIZE));
+    pub fn new(buffer: B) -> Option<Self> {
+        if buffer.as_slice().len() < usize(HEADER_SIZE) {
+            return None;
+        }
 
-        Frame { buffer }
+        Some(Frame { buffer })
     }
 
     /// Parses bytes into an Ethernet frame
@@ -207,17 +209,19 @@ where
     }
 
     /// Fills the payload with an IPv6 packet
-    pub fn ipv6<F>(&mut self, f: F)
+    pub fn ipv6<F>(&mut self, f: F) -> Option<()>
     where
         F: FnOnce(&mut ipv6::Packet<&mut [u8]>),
     {
         self.set_type(Type::Ipv6);
         let len = {
-            let mut ip = ipv6::Packet::new(self.payload_mut());
+            let mut ip = ipv6::Packet::new(self.payload_mut())?;
             f(&mut ip);
             ip.get_length() + u16(ipv6::HEADER_SIZE)
         };
         self.buffer.truncate(u16(HEADER_SIZE) + len);
+
+        Some(())
     }
 }
 

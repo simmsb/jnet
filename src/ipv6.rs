@@ -181,9 +181,11 @@ where
     ///
     /// - the given `buffer` is smaller than `HEADER_SIZE`
     /// - the packet would result in a payload length larger than `u16::MAX`.
-    pub fn new(buffer: B) -> Self {
+    pub fn new(buffer: B) -> Option<Self> {
         let blen = buffer.as_slice().len();
-        assert!(blen >= usize(HEADER_SIZE) || blen > usize(u16::MAX) + usize(HEADER_SIZE));
+        if !(blen >= usize(HEADER_SIZE) || blen > usize(u16::MAX) + usize(HEADER_SIZE)) {
+            return None;
+        }
 
         let mut p = Packet { buffer };
 
@@ -197,7 +199,7 @@ where
         // p.set_source(..);
         // p.set_destination(..);
 
-        p
+        Some(p)
     }
 
     /// Sets the 'Traffic class' field
@@ -232,10 +234,14 @@ where
     /// # Panics
     ///
     /// This function panics if `nh` is an extension header (currently not supported)
-    pub fn set_next_header(&mut self, nh: NextHeader) {
-        assert!(!nh.is_ipv6_extension_header());
+    pub fn set_next_header(&mut self, nh: NextHeader) -> Option<()> {
+        if nh.is_ipv6_extension_header() {
+            return None;
+        }
 
         self.header_mut()[NEXT_HEADER] = nh.into();
+
+        Some(())
     }
 
     /// Sets the 'Hop limit' field
@@ -316,13 +322,13 @@ where
     }
 
     /// Fills the payload with a UDP packet
-    pub fn udp(&mut self, f: impl FnOnce(&mut udp::Packet<&mut [u8]>)) {
+    pub fn udp(&mut self, f: impl FnOnce(&mut udp::Packet<&mut [u8]>)) -> Option<()> {
         let src = self.get_source();
         let dest = self.get_destination();
 
         self.set_next_header(NextHeader::Udp);
 
-        let mut packet = udp::Packet::new(self.payload_mut());
+        let mut packet = udp::Packet::new(self.payload_mut())?;
 
         f(&mut packet);
 
@@ -330,6 +336,8 @@ where
 
         let len = packet.as_bytes().len() as u16;
         self.truncate(len);
+
+        Some(())
     }
 
     /// Truncates the *payload* to the specified length
