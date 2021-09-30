@@ -211,12 +211,12 @@ where
     /// Fills the payload with an IPv6 packet
     pub fn ipv6<F>(&mut self, f: F) -> Option<()>
     where
-        F: FnOnce(&mut ipv6::Packet<&mut [u8]>),
+        F: FnOnce(&mut ipv6::Packet<&mut [u8]>) -> Option<()>,
     {
         self.set_type(Type::Ipv6);
         let len = {
             let mut ip = ipv6::Packet::new(self.payload_mut())?;
-            f(&mut ip);
+            f(&mut ip)?;
             ip.get_length() + u16(ipv6::HEADER_SIZE)
         };
         self.buffer.truncate(u16(HEADER_SIZE) + len);
