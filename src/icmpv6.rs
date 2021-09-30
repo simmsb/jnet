@@ -198,7 +198,8 @@ where
         self.set_checksum(checksum);
     }
 
-    fn set_checksum(&mut self, checksum: u16) {
+    /// Set the checksum value
+    pub fn set_checksum(&mut self, checksum: u16) {
         NE::write_u16(&mut self.header_mut_()[CHECKSUM], checksum);
     }
 
