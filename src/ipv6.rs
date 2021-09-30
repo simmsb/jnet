@@ -282,7 +282,8 @@ where
 
     // NOTE(unsafe) this does *not* truncate the buffer or check if `len` is greater than the
     // length of the current buffer
-    unsafe fn set_length(&mut self, len: u16) {
+    /// Set the value of the length field
+    pub unsafe fn set_length(&mut self, len: u16) {
         NE::write_u16(&mut self.header_mut()[LENGTH], len);
     }
 }
