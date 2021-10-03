@@ -76,10 +76,10 @@ where
             return Err(());
         }
 
-        if p.get_next_header().is_ipv6_extension_header() {
-            // currently unsupported
-            return Err(());
-        }
+        // if p.get_next_header().is_ipv6_extension_header() {
+        //     // currently unsupported
+        //     return Err(());
+        // }
 
         Ok(p)
     }

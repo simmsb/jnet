@@ -70,7 +70,8 @@ where
         NE::read_u16(&self.header_()[LENGTH])
     }
 
-    fn get_checksum(&self) -> u16 {
+    /// get the udp checksum
+    pub fn get_checksum(&self) -> u16 {
         NE::read_u16(&self.header_()[CHECKSUM])
     }
 

@@ -285,24 +285,21 @@ where
     B: AsMutSlice<Element = u8>,
 {
     /// Construct an Icmpv6 time exceeded packet
-    ///
-    /// Note: this does not set the body, only the reserved bytes
-    pub fn time_exceeded(buffer: B, body_len: usize) -> Option<Self> {
-        if buffer.as_slice().len() < (8 + body_len) {
-            return None;
-        }
-
+    pub fn time_exceeded(buffer: B) -> Self {
         let mut b = unsafe { Message::unchecked(buffer) };
 
         b.header_mut_()[TYPE] = 3;
         b.header_mut_()[CODE] = 0;
 
         // set reserved to zero
-        b.as_mut_slice()[4..8].fill(0);
+        b.as_mut_slice()[4] = 0;
+        b.as_mut_slice()[5] = 0;
+        b.as_mut_slice()[6] = 0;
+        b.as_mut_slice()[7] = 0;
 
         // b.as_mut_slice()[8..(8 + body.as_slice().len())].copy_from_slice(body.as_slice());
 
-        Some(b)
+        b
     }
 
     /// Get the payload after the reserved bytes
